@@ -1,4 +1,5 @@
 const helper = require("./lib/helpers");
+const lib = require("./lib/data");
 
 // User Post Action
 // Required Data: firstName, lastName, phone, password, tosAgreement
@@ -11,14 +12,27 @@ const postUserAction = data => {
     password: ["STRING", "REQUIRED", "LENMIN6", "LENMAX15"],
     tosAgreement: ["BOOLEAN", "REQUIRED", "CHECKED"]
   });
-  if (validationResult.invalid.length === 0) {
+  if (Object.keys(validationResult.invalid).length === 0) {
+    console.log("Coming in if");
     // Perform post action
-    return {
-      statusCode: 200,
-      payload: {
-        msg: "POST Successful"
+    lib.create("users", data.phone, data, msg => {
+      console.log("No err in creating file");
+      if (!msg) {
+        return {
+          statusCode: 200,
+          payload: {
+            msg: "POST Successful"
+          }
+        };
+      } else {
+        return {
+          statusCode: 200,
+          payload: {
+            msg
+          }
+        };
       }
-    };
+    });
   } else {
     const errMsgData = helper.getErrorMsgForFields(validationResult.invalid);
     return {
