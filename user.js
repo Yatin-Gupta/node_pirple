@@ -1,59 +1,123 @@
-const helper = require("./lib/helpers");
-const lib = require("./lib/data");
-
+const helper = require('./lib/helpers');
+const dataCreator = require('./lib/data');
 // User Post Action
 // Required Data: firstName, lastName, phone, password, tosAgreement
 // Optional Data: None
-const postUserAction = data => {
+const postUserAction = (data, callback) => {
   const validationResult = helper.validate(data, {
-    firstName: ["STRING", "REQUIRED"],
-    lastName: ["STRING", "REQUIRED"],
-    phone: ["STRING", "REQUIRED", "LENEQUAL10"],
-    password: ["STRING", "REQUIRED", "LENMIN6", "LENMAX15"],
-    tosAgreement: ["BOOLEAN", "REQUIRED", "CHECKED"]
+    firstName: ['STRING', 'REQUIRED'],
+    lastName: ['STRING', 'REQUIRED'],
+    phone: ['STRING', 'REQUIRED', 'LENEQUAL10'],
+    password: ['STRING', 'REQUIRED', 'LENMIN6', 'LENMAX15'],
+    tosAgreement: ['BOOLEAN', 'REQUIRED', 'CHECKED']
   });
   if (Object.keys(validationResult.invalid).length === 0) {
-    console.log("Coming in if");
     // Perform post action
-    lib.create("users", data.phone, data, msg => {
-      console.log("No err in creating file");
-      if (!msg) {
-        return {
-          statusCode: 200,
-          payload: {
-            msg: "POST Successful"
-          }
-        };
+    dataCreator.create('users', data.phone, data, errMsg => {
+      if (errMsg) {
+        callback(200, { msg: errMsg });
       } else {
-        return {
-          statusCode: 200,
-          payload: {
-            msg
-          }
-        };
+        callback(200, { msg: 'POST Successful' });
       }
     });
   } else {
-    const errMsgData = helper.getErrorMsgForFields(validationResult.invalid);
-    return {
-      statusCode: 200,
-      payload: errMsgData
-    };
+    const errMsg = helper.getErrorMsgForFields(validationResult.invalid);
+    callback(200, { msg: errMsg });
   }
 };
 
-const putUserAction = data => {};
-
-const getUserAction = data => {
-  return {
-    statusCode: 200,
-    payload: {
-      msg: "GET Successful"
-    }
-  };
+// Required - phone
+// Optional - others
+const putUserAction = (data, callback) => {
+  if (data && data.phone) {
+    dataCreator.read('users', data.phone, (errMsg, readData = {}) => {
+      if (!errMsg) {
+        let result = {
+          firstName: '',
+          lastName: '',
+          phone: data.phone,
+          password: '',
+          tosAgreement: true
+        };
+        for (let prop in result) {
+          result[prop] = data[prop] ? data[prop] : readData[prop];
+        }
+        dataCreator.update('users', data.phone, result, errMsg => {
+          if (!errMsg) {
+            callback(200, {
+              msg: 'Update Successful'
+            });
+          } else {
+            callback(200, {
+              msg: errMsg
+            });
+          }
+        });
+      } else {
+        callback(200, {
+          msg: errMsg
+        });
+      }
+    });
+  } else {
+    callback(200, {
+      msg: 'Phone is required.'
+    });
+  }
 };
 
-const deleteUserAction = data => {};
+// Required - phone
+// Optional - others
+const getUserAction = (data, callback) => {
+  if (data && data.phone) {
+    dataCreator.read('users', data.phone, (errMsg, data = {}) => {
+      if (!errMsg) {
+        callback(200, {
+          msg: 'GET Successful',
+          data
+        });
+      } else {
+        callback(200, {
+          msg: errMsg
+        });
+      }
+    });
+  } else {
+    callback(200, {
+      msg: 'Phone is required.'
+    });
+  }
+};
+
+// Required - phone
+// Optional - others
+const deleteUserAction = (data, callback) => {
+  if (data && data.phone) {
+    dataCreator.read('users', data.phone, (errMsg, data = {}) => {
+      if (!errMsg) {
+        dataCreator.delete('users', data.phone, errMsg => {
+          if (!errMsg) {
+            callback(200, {
+              msg: 'Deleted Successfully'
+            });
+          } else {
+            callback(200, {
+              msg: errMsg
+            });
+          }
+        });
+      } else {
+        callback(200, {
+          msg: errMsg
+        });
+      }
+    });
+  } else {
+    callback(200, {
+      msg: 'Phone is required.'
+    });
+  }
+};
 
 module.exports = {
   get: getUserAction,

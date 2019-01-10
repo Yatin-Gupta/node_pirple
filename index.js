@@ -11,7 +11,7 @@ const unifiedAction = (request, response) => {
   const decoder = new StringDecoder("utf-8");
   let payload = "";
   let reqUrlObj = url.parse(request.url, true);
-  let trimmedPath = reqUrlObj.path.trim().replace(/^\/|\/$/g, "");
+  let trimmedPath = reqUrlObj.pathname.trim().replace(/^\/|\/$/g, "");
   request.on("data", data => {
     payload += decoder.write(data);
   });
@@ -22,48 +22,13 @@ const unifiedAction = (request, response) => {
     const sendData = {
       path: trimmedPath,
       headers: request.headers,
+      queryParams: reqUrlObj.query,
       method: request.method.toLowerCase(),
       payload
     };
     resultHandler(sendData, (statusCode, outputPayload = {}) => {
       response.setHeader("Content-Type", "application/json");
       const outputPayloadString = JSON.stringify(outputPayload);
-      // File Operation
-      _data.create("test", "payload", outputPayload, err => {
-        if (err) {
-          console.log(`Error: ${err}`);
-          response.end(err);
-        } else {
-          console.log("Read Result: ");
-          _data.read("test", "payload", (err, data = "") => {
-            if (err) {
-              console.log(`Error: ${err}`);
-            } else {
-              console.log(`Data: ${data}`);
-              console.log("Update Result: ");
-              _data.update("test", "payload", { name: "Karan Johar" }, err => {
-                if (err) {
-                  response.end(err);
-                } else {
-                  _data.read("test", "payload", (err, data = "") => {
-                    if (err) {
-                      console.log(`Error: ${err}`);
-                    } else {
-                      console.log(`Data: ${data}`);
-                      console.log("Deleting File....");
-                      _data.delete("test", "payload", err => {
-                        if (err) {
-                          console.log(`Error: ${err}`);
-                        }
-                      });
-                    }
-                  });
-                }
-              });
-            }
-          });
-        }
-      });
       response.writeHead(statusCode);
       response.end(outputPayloadString);
     });
