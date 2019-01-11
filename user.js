@@ -1,5 +1,6 @@
 const helper = require('./lib/helpers');
 const dataCreator = require('./lib/data');
+const token = require('./token');
 // User Post Action
 // Required Data: firstName, lastName, phone, password, tosAgreement
 // Optional Data: None
@@ -17,7 +18,12 @@ const postUserAction = (data, callback) => {
       if (errMsg) {
         callback(200, { msg: errMsg });
       } else {
-        callback(200, { msg: 'POST Successful' });
+        const tokenOb = token.createTokenAction({ phone: data.phone });
+        if (tokenOb.error) {
+          callback(200, { msg: tokenOb.error });
+        } else {
+          callback(200, { msg: 'POST Successful', token: tokenOb.token });
+        }
       }
     });
   } else {
@@ -70,16 +76,27 @@ const putUserAction = (data, callback) => {
 // Optional - others
 const getUserAction = (data, callback) => {
   if (data && data.phone) {
-    dataCreator.read('users', data.phone, (errMsg, data = {}) => {
+    // Get token
+    dataCreator.read('tokens', data.phone, (errMsg, tokenData = {}) => {
       if (!errMsg) {
-        callback(200, {
-          msg: 'GET Successful',
-          data
-        });
-      } else {
-        callback(200, {
-          msg: errMsg
-        });
+        if (tokenData.token === data.token) {
+          dataCreator.read('users', data.phone, (errMsg, data = {}) => {
+            if (!errMsg) {
+              callback(200, {
+                msg: 'GET Successful',
+                data
+              });
+            } else {
+              callback(200, {
+                msg: errMsg
+              });
+            }
+          });
+        } else {
+          callback(200, {
+            msg: 'Invalid Token.'
+          });
+        }
       }
     });
   } else {
@@ -93,12 +110,31 @@ const getUserAction = (data, callback) => {
 // Optional - others
 const deleteUserAction = (data, callback) => {
   if (data && data.phone) {
-    dataCreator.read('users', data.phone, (errMsg, data = {}) => {
-      if (!errMsg) {
-        dataCreator.delete('users', data.phone, errMsg => {
+    // Get token
+    dataCreator.read('tokens', data.phone, (tokenErrMsg, tokenData = {}) => {
+      if (tokenErrMsg) {
+        callback(200, { msg: tokenErrMsg });
+      } else if (tokenData.token === data.token) {
+        dataCreator.read('users', data.phone, (errMsg, data = {}) => {
           if (!errMsg) {
-            callback(200, {
-              msg: 'Deleted Successfully'
+            dataCreator.delete('users', data.phone, errMsg => {
+              if (!errMsg) {
+                dataCreator.delete('tokens', data.phone, errMsg => {
+                  if (!errMsg) {
+                    callback(200, {
+                      msg: 'Deleted Successfully'
+                    });
+                  } else {
+                    callback(200, {
+                      msg: errMsg
+                    });
+                  }
+                });
+              } else {
+                callback(200, {
+                  msg: errMsg
+                });
+              }
             });
           } else {
             callback(200, {
@@ -108,7 +144,7 @@ const deleteUserAction = (data, callback) => {
         });
       } else {
         callback(200, {
-          msg: errMsg
+          msg: 'Invalid Token.'
         });
       }
     });
