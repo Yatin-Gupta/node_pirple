@@ -5,16 +5,16 @@ const url = require('url');
 const StringDecoder = require('string_decoder').StringDecoder;
 const environment = require('./lib/config');
 const handlers = require('./lib/handlers');
-const helper = require('./lib/helpers');
+// const helper = require('./lib/helpers');
 
 // Code for Sending SMS
-helper.sendTwilioSms('9718847244', 'Hello World, Yatin Gupta', errMsg => {
-  if (!errMsg) {
-    console.log('SMS Sent Successfully!!');
-  } else {
-    console.log('Error comes is: ' + errMsg);
-  }
-});
+// helper.sendTwilioSms('9718847244', 'Hello World, Yatin Gupta', errMsg => {
+//   if (!errMsg) {
+//     console.log('SMS Sent Successfully!!');
+//   } else {
+//     console.log('Error comes is: ' + errMsg);
+//   }
+// });
 
 const unifiedAction = (request, response) => {
   const decoder = new StringDecoder('utf-8');
