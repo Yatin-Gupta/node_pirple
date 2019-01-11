@@ -36,29 +36,43 @@ const postUserAction = (data, callback) => {
 // Optional - others
 const putUserAction = (data, callback) => {
   if (data && data.phone) {
-    dataCreator.read('users', data.phone, (errMsg, readData = {}) => {
+    dataCreator.read('tokens', data.phone, (errMsg, tokenData = {}) => {
       if (!errMsg) {
-        let result = {
-          firstName: '',
-          lastName: '',
-          phone: data.phone,
-          password: '',
-          tosAgreement: true
-        };
-        for (let prop in result) {
-          result[prop] = data[prop] ? data[prop] : readData[prop];
+        if (tokenData.token === data.token) {
+          dataCreator.read('users', data.phone, (errMsg, readData = {}) => {
+            if (!errMsg) {
+              let result = {
+                firstName: '',
+                lastName: '',
+                phone: data.phone,
+                password: '',
+                tosAgreement: true
+              };
+              for (let prop in result) {
+                result[prop] = data[prop] ? data[prop] : readData[prop];
+              }
+              dataCreator.update('users', data.phone, result, errMsg => {
+                if (!errMsg) {
+                  callback(200, {
+                    msg: 'Update Successful'
+                  });
+                } else {
+                  callback(200, {
+                    msg: errMsg
+                  });
+                }
+              });
+            } else {
+              callback(200, {
+                msg: errMsg
+              });
+            }
+          });
+        } else {
+          callback(200, {
+            msg: 'Invalid Token.'
+          });
         }
-        dataCreator.update('users', data.phone, result, errMsg => {
-          if (!errMsg) {
-            callback(200, {
-              msg: 'Update Successful'
-            });
-          } else {
-            callback(200, {
-              msg: errMsg
-            });
-          }
-        });
       } else {
         callback(200, {
           msg: errMsg

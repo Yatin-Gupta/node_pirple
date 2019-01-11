@@ -7,6 +7,7 @@ const environment = require('./lib/config');
 const handlers = require('./lib/handlers');
 const helper = require('./lib/helpers');
 
+// Code for Sending SMS
 helper.sendTwilioSms('9718847244', 'Hello World, Yatin Gupta', errMsg => {
   if (!errMsg) {
     console.log('SMS Sent Successfully!!');
