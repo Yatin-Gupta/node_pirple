@@ -18,7 +18,7 @@ const postUserAction = (data, callback) => {
       if (errMsg) {
         callback(200, { msg: errMsg });
       } else {
-        const tokenOb = token.createTokenAction({ phone: data.phone });
+        const tokenOb = token.createTokenAction(data);
         if (tokenOb.error) {
           callback(200, { msg: tokenOb.error });
         } else {
@@ -91,6 +91,7 @@ const putUserAction = (data, callback) => {
 const getUserAction = (data, callback) => {
   if (data && data.phone) {
     // Get token
+    console.log(token.verifyJWT(data.token));
     dataCreator.read('tokens', data.phone, (errMsg, tokenData = {}) => {
       if (!errMsg) {
         if (tokenData.token === data.token) {
